@@ -28,7 +28,7 @@ COPY index.php ./
 COPY api/ ./api/
 
 # Copy compiled static frontend assets from Stage 1
-COPY --from=frontend-builder /app/dist ./dist
+COPY --from=frontend-builder /app/dist .
 
 # Set correct read/write permissions for Apache (www-data) on SQLite database file and directories
 RUN chown -R www-data:www-data /var/www/html && \
