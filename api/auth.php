@@ -8,12 +8,12 @@ $action = $_GET['action'] ?? $input['action'] ?? '';
 // Helper to decode bearer token and return user details or false
 function get_auth_user($db) {
     $headers = getallheaders();
-    $auth_header = $headers['Authorization'] ?? $headers['authorization'] ?? '';
+    $auth_header = $headers['Authorization'] ?? $headers['authorization'] ?? $_SERVER['HTTP_AUTHORIZATION'] ?? '';
     if (preg_match('/Bearer\s+(.*)$/i', $auth_header, $matches)) {
         $token = $matches[1];
         $decoded = json_decode(base64_decode($token), true);
         if ($decoded && isset($decoded['id'])) {
-            $stmt = $db->prepare("SELECT id, name, email, role, father_name, education, address, experience_plane, experience_heli, experience_glider, experience_jet, competition_exp, judging_exp, models_bringing, allow_profile_edit FROM users WHERE id = ?");
+            $stmt = $db->prepare("SELECT id, name, email, role, father_name, education, address, mobile, aadhar_card, experience_plane, experience_heli, experience_glider, experience_jet, competition_exp, judging_exp, models_bringing, allow_profile_edit FROM users WHERE id = ?");
             $stmt->execute([$decoded['id']]);
             return $stmt->fetch();
         }
@@ -95,6 +95,8 @@ if (basename(__FILE__) === basename($_SERVER['SCRIPT_FILENAME'] ?? '')) {
                         "father_name" => $user['father_name'],
                         "education" => $user['education'],
                         "address" => $user['address'],
+                        "mobile" => $user['mobile'],
+                        "aadhar_card" => $user['aadhar_card'],
                         "experience_plane" => $user['experience_plane'],
                         "experience_heli" => $user['experience_heli'],
                         "experience_glider" => $user['experience_glider'],
@@ -121,6 +123,8 @@ if (basename(__FILE__) === basename($_SERVER['SCRIPT_FILENAME'] ?? '')) {
             $father_name = trim($input['father_name'] ?? '');
             $education = trim($input['education'] ?? '');
             $address = trim($input['address'] ?? '');
+            $mobile = trim($input['mobile'] ?? '');
+            $aadhar_card = trim($input['aadhar_card'] ?? '');
             $experience_plane = trim($input['experience_plane'] ?? '');
             $experience_heli = trim($input['experience_heli'] ?? '');
             $experience_glider = trim($input['experience_glider'] ?? '');
@@ -129,23 +133,34 @@ if (basename(__FILE__) === basename($_SERVER['SCRIPT_FILENAME'] ?? '')) {
             $judging_exp = trim($input['judging_exp'] ?? '');
             $models_bringing = trim($input['models_bringing'] ?? '');
             $name = trim($input['name'] ?? $user['name']);
+
+            // Check if user has any approved registrations
+            $chk = $db->prepare("SELECT id FROM registrations WHERE user_id = ? AND status = 'approved' LIMIT 1");
+            $chk->execute([$user['id']]);
+            $hasApproved = $chk->fetch();
+
+            if ($hasApproved) {
+                // Ignore submitted name/address if application is already accepted
+                $name = $user['name'];
+                $address = $user['address'];
+            }
             
             $stmt = $db->prepare("UPDATE users SET 
-                name = ?, father_name = ?, education = ?, address = ?, 
+                name = ?, father_name = ?, education = ?, address = ?, mobile = ?, aadhar_card = ?, 
                 experience_plane = ?, experience_heli = ?, experience_glider = ?, experience_jet = ?, 
-                competition_exp = ?, judging_exp = ?, models_bringing = ?,
-                allow_profile_edit = 0
+                competition_exp = ?, judging_exp = ?, models_bringing = ?
                 WHERE id = ?");
                 
             try {
                 $stmt->execute([
-                    $name, $father_name, $education, $address,
+                    $name, $father_name, $education, $address, $mobile, $aadhar_card,
                     $experience_plane, $experience_heli, $experience_glider, $experience_jet,
-                    $competition_exp, $judging_exp, $models_bringing, $user['id']
+                    $competition_exp, $judging_exp, $models_bringing,
+                    $user['id']
                 ]);
                 
                 // Get updated profile
-                $get = $db->prepare("SELECT id, name, email, role, father_name, education, address, experience_plane, experience_heli, experience_glider, experience_jet, competition_exp, judging_exp, models_bringing, allow_profile_edit FROM users WHERE id = ?");
+                $get = $db->prepare("SELECT id, name, email, role, father_name, education, address, mobile, aadhar_card, experience_plane, experience_heli, experience_glider, experience_jet, competition_exp, judging_exp, models_bringing, allow_profile_edit FROM users WHERE id = ?");
                 $get->execute([$user['id']]);
                 
                 echo json_encode([

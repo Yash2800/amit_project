@@ -67,6 +67,22 @@ export const CommPortal: React.FC<CommPortalProps> = ({
     fetchRegistrations();
   }, []);
 
+  // Handle ?scan= URL parameter for QR Boarding Passes
+  useEffect(() => {
+    if (registrations.length > 0) {
+      const urlParams = new URLSearchParams(window.location.search);
+      const scanId = urlParams.get('scan');
+      if (scanId) {
+        const reg = registrations.find(r => r.id.toString() === scanId);
+        if (reg) {
+          handleOpenTechModal(reg);
+          // Clean up URL so it doesn't re-trigger on refresh
+          window.history.replaceState({}, '', window.location.pathname);
+        }
+      }
+    }
+  }, [registrations]);
+
   const fetchRegistrations = async () => {
     setLoading(true);
     try {
@@ -407,12 +423,12 @@ export const CommPortal: React.FC<CommPortalProps> = ({
                 <div style={{ fontWeight: 600, fontSize: '0.85rem', textTransform: 'uppercase', color: 'var(--text-muted)' }}>Rules Check Details</div>
                 
                 {selectedReg.aircraft_type === 'heli' ? (
-                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.9rem' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', flexWrap: 'wrap', gap: '0.5rem', fontSize: '0.9rem' }}>
                     <span>Rotor Size Registered: <strong>{selectedReg.rotor_dia} cm</strong></span>
                     <span>Rule Threshold: <strong>Min {selectedReg.min_specs.min_rotor_dia} cm</strong></span>
                   </div>
                 ) : (
-                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.9rem' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', flexWrap: 'wrap', gap: '0.5rem', fontSize: '0.9rem' }}>
                     <span>Wing Span Registered: <strong>{selectedReg.wing_span} cm</strong></span>
                     <span>Rule Range: <strong>
                       {selectedReg.min_specs.min_wing_span} {selectedReg.min_specs.max_wing_span ? `- ${selectedReg.min_specs.max_wing_span}` : ''} cm
@@ -420,7 +436,7 @@ export const CommPortal: React.FC<CommPortalProps> = ({
                   </div>
                 )}
                 
-                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.9rem' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', flexWrap: 'wrap', gap: '0.5rem', fontSize: '0.9rem' }}>
                   <span>Engine / Motor Info: <strong>{selectedReg.engine_type?.toUpperCase()} ({selectedReg.engine_size})</strong></span>
                   <span>Allowed Engines: <strong style={{ textTransform: 'uppercase' }}>
                     {selectedReg.min_specs.allowed_engines?.join(', ')}

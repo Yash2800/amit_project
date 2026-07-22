@@ -14,7 +14,7 @@ $action = $_GET['action'] ?? $input['action'] ?? '';
 
 if ($_SERVER['REQUEST_METHOD'] === 'GET') {
     // Return all users
-    $stmt = $db->query("SELECT id, name, email, role, father_name, education, address, experience_plane, experience_heli, experience_glider, experience_jet, competition_exp, judging_exp, models_bringing, allow_profile_edit FROM users ORDER BY name ASC");
+    $stmt = $db->query("SELECT id, name, email, role, father_name, education, address, aadhar_card, experience_plane, experience_heli, experience_glider, experience_jet, competition_exp, judging_exp, models_bringing, allow_profile_edit FROM users ORDER BY name ASC");
     $users_list = $stmt->fetchAll();
     
     // Fetch assignments for commissioners

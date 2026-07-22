@@ -106,7 +106,7 @@ export const Auth: React.FC<AuthProps> = ({ onLoginSuccess, onBackToLanding, ini
           <div style={{ display: 'inline-flex', padding: '0.75rem', borderRadius: '12px', backgroundColor: 'var(--primary-light)', marginBottom: '1rem', border: '1px solid var(--primary-border)' }}>
             <Plane size={32} style={{ color: 'var(--primary)' }} />
           </div>
-          <h2 className="auth-title">AeroManager Portal</h2>
+          <h2 className="auth-title" style={{ fontSize: '1.5rem' }}>National Aeromodelling Championship 2026</h2>
           <p style={{ fontSize: '0.9rem' }}>National Aeromodelling Registration & Scoring</p>
         </div>
 

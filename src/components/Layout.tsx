@@ -9,8 +9,9 @@ import {
   Trophy, 
   CheckSquare,
   ClipboardCheck,
-  Plane
+  Zap
 } from 'lucide-react';
+import aeroClubLogo from '../assets/aero_club_logo.png';
 
 interface LayoutProps {
   user: {
@@ -40,9 +41,8 @@ export const Layout: React.FC<LayoutProps> = ({
     <div className="app-container">
       {/* Sidebar Navigation */}
       <aside className="sidebar">
-        <div className="sidebar-header">
-          <Plane className="text-primary" size={24} style={{ color: '#6366f1' }} />
-          <span className="sidebar-brand">AeroManager</span>
+        <div className="sidebar-header" style={{ display: 'flex', justifyContent: 'center' }}>
+          <img src={aeroClubLogo} alt="Aero Club" style={{ height: '40px', width: 'auto' }} />
         </div>
         
         <nav className="sidebar-nav">
@@ -54,19 +54,13 @@ export const Layout: React.FC<LayoutProps> = ({
           {isUser && (
             <>
               <button 
-                onClick={() => setActiveTab('profile')} 
-                className={`sidebar-link ${activeTab === 'profile' ? 'active' : ''}`}
+                onClick={() => setActiveTab('registration-wizard')} 
+                className={`sidebar-link ${activeTab === 'registration-wizard' ? 'active' : ''}`}
               >
                 <UserIcon size={18} />
-                <span>My Profile</span>
+                <span>Registration Form</span>
               </button>
-              <button 
-                onClick={() => setActiveTab('register-model')} 
-                className={`sidebar-link ${activeTab === 'register-model' ? 'active' : ''}`}
-              >
-                <PlusCircleIcon size={18} />
-                <span>Register Model</span>
-              </button>
+
               <button 
                 onClick={() => setActiveTab('my-registrations')} 
                 className={`sidebar-link ${activeTab === 'my-registrations' ? 'active' : ''}`}
@@ -141,6 +135,20 @@ export const Layout: React.FC<LayoutProps> = ({
               >
                 <Sliders size={18} />
                 <span>Manage Categories</span>
+              </button>
+              <button 
+                onClick={() => setActiveTab('admin-updates')} 
+                className={`sidebar-link ${activeTab === 'admin-updates' ? 'active' : ''}`}
+              >
+                <Zap size={18} />
+                <span>Flash Updates</span>
+              </button>
+              <button 
+                onClick={() => setActiveTab('admin-scoring')} 
+                className={`sidebar-link ${activeTab === 'admin-scoring' ? 'active' : ''}`}
+              >
+                <Award size={18} />
+                <span>Flight Scoring</span>
               </button>
               <button 
                 onClick={() => setActiveTab('leaderboards')} 

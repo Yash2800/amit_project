@@ -1,12 +1,15 @@
 // src/pages/Landing.tsx
 import React, { useState, useEffect } from 'react';
 import { 
-  Plane, Award, Calendar, ArrowRight, 
-  X, Info, Zap, Layers, MapPin 
+  Calendar, Users, 
+  ArrowRight, ShieldCheck,
+  X, Info, Zap, Layers, MapPin,
+  CreditCard, UserCheck, Truck, MessageCircle, Mail, AlertTriangle, Badge,
+  Plane, Award, Coffee
 } from 'lucide-react';
 import { Leaderboards } from '../components/Leaderboards';
-import aciLogo from '../assets/aci_logo.png';
-import dbLogo from '../assets/db_logo.png';
+import aciLogo from '../assets/aero_club_logo.png';
+import dbLogo from '../assets/image.png';
 import heroBanner from '../assets/aerobatics_hero.png';
 
 interface Category {
@@ -32,12 +35,16 @@ interface Category {
 
 interface LandingProps {
   onNavigateToAuth: (tab: 'login' | 'register') => void;
+  onNavigateToLeaderboard: () => void;
+  onNavigateToRules: () => void;
 }
 
-export const Landing: React.FC<LandingProps> = ({ onNavigateToAuth }) => {
+export const Landing: React.FC<LandingProps> = ({ onNavigateToAuth, onNavigateToLeaderboard, onNavigateToRules }) => {
   const [categories, setCategories] = useState<Category[]>([]);
   const [selectedCat, setSelectedCat] = useState<Category | null>(null);
   const [loadingCats, setLoadingCats] = useState(true);
+  const [isNavVisible, setIsNavVisible] = useState(true);
+  const [flashUpdates, setFlashUpdates] = useState<{id: number, message: string}[]>([]);
 
   useEffect(() => {
     const fetchCats = async () => {
@@ -54,6 +61,33 @@ export const Landing: React.FC<LandingProps> = ({ onNavigateToAuth }) => {
       }
     };
     fetchCats();
+
+    const fetchUpdates = async () => {
+      try {
+        const res = await fetch('/api/updates.php');
+        const data = await res.json();
+        if (data.updates) {
+          setFlashUpdates(data.updates);
+        }
+      } catch (err) {
+        console.error("Failed to load updates", err);
+      }
+    };
+    fetchUpdates();
+
+    let lastScrollY = window.scrollY;
+    const handleScroll = () => {
+      const currentScrollY = window.scrollY;
+      if (currentScrollY > lastScrollY && currentScrollY > 80) {
+        setIsNavVisible(false); // scrolling down
+      } else {
+        setIsNavVisible(true); // scrolling up
+      }
+      lastScrollY = currentScrollY;
+    };
+    
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
   const getAircraftIcon = (type: string) => {
@@ -90,10 +124,15 @@ export const Landing: React.FC<LandingProps> = ({ onNavigateToAuth }) => {
     <div style={{ backgroundColor: '#0b0f19', color: '#f8fafc', minHeight: '100vh', overflowX: 'hidden' }}>
       
       {/* Sticky Navigation Bar */}
-      <nav className="landing-nav">
+      <nav 
+        className="landing-nav"
+        style={{ 
+          transform: isNavVisible ? 'translateY(0)' : 'translateY(-100%)',
+          transition: 'transform 0.3s ease-in-out'
+        }}
+      >
         <span style={{ cursor: 'pointer' }} onClick={() => scrollToSection('home')} className="nav-brand">
-          <Plane size={28} style={{ transform: 'rotate(-45deg)' }} />
-          <span>AERO CHAMPIONSHIP</span>
+          <img src={aciLogo} alt="Aero Club" style={{ height: '40px', width: 'auto' }} />
         </span>
         <div className="nav-links">
           <span className="nav-link" onClick={() => scrollToSection('home')}>Home</span>
@@ -101,8 +140,12 @@ export const Landing: React.FC<LandingProps> = ({ onNavigateToAuth }) => {
           <span className="nav-link" onClick={() => scrollToSection('categories')}>Categories</span>
           <span className="nav-link" onClick={() => scrollToSection('standings')}>Live Standings</span>
           <span className="nav-link" onClick={() => scrollToSection('schedule')}>Schedule</span>
+          <span className="nav-link" onClick={onNavigateToRules} style={{ color: 'var(--primary)' }}>Rules</span>
         </div>
         <div className="nav-actions">
+          <button className="btn-secondary" onClick={onNavigateToLeaderboard} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+            <Award size={16} /> Leaderboard
+          </button>
           <button className="btn-outline-premium" onClick={() => onNavigateToAuth('login')}>
             Sign In
           </button>
@@ -136,7 +179,7 @@ export const Landing: React.FC<LandingProps> = ({ onNavigateToAuth }) => {
             </div>
             <h1 className="hero-title" style={{ textAlign: 'left', fontSize: '3.5rem' }}>
               Where Speed Meets the Sky:<br />
-              <span>Aeromodelling Championship</span>
+              <span>National Aeromodelling Championship 2026</span>
             </h1>
             <p className="hero-description" style={{ textAlign: 'left' }}>
               Experience the ultimate test of flying skill, aircraft design, and engineering precision. Organised under the governance of the <strong>Aero Club of India</strong> and held in unity with <strong>Dainik Bhaskar</strong>.
@@ -188,6 +231,26 @@ export const Landing: React.FC<LandingProps> = ({ onNavigateToAuth }) => {
         </div>
       </header>
 
+      {/* Flash Updates */}
+      {flashUpdates.length > 0 && (
+        <div className="flash-updates" style={{ background: 'rgba(11, 15, 25, 0.9)', backdropFilter: 'blur(10px)', borderTop: '1px solid var(--primary-border)', borderBottom: '1px solid var(--primary-border)', padding: '0.75rem 1rem', display: 'flex', alignItems: 'center', gap: '1rem', color: 'var(--text-primary)', zIndex: 20, position: 'relative', overflow: 'hidden' }}>
+          <div style={{ background: 'linear-gradient(135deg, var(--primary) 0%, var(--accent) 100%)', color: '#fff', padding: '0.35rem 0.85rem', borderRadius: '6px', fontSize: '0.75rem', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '1px', display: 'flex', alignItems: 'center', gap: '0.5rem', whiteSpace: 'nowrap', zIndex: 2, boxShadow: '0 0 15px rgba(99,102,241,0.3)' }}>
+            <AlertTriangle size={14} /> Flash Update
+          </div>
+          <div className="ticker-wrap">
+            <div className="ticker">
+              {flashUpdates.map(u => (
+                <span key={`f1-${u.id}`} className="ticker-item"><span className="ticker-dot"></span> {u.message}</span>
+              ))}
+              {/* Duplicate for infinite loop */}
+              {flashUpdates.map(u => (
+                <span key={`f2-${u.id}`} className="ticker-item"><span className="ticker-dot"></span> {u.message}</span>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Organizer & Partner Section */}
       <section id="about" className="partners-section">
         <span className="section-tag">Partnership & Governance</span>
@@ -195,7 +258,7 @@ export const Landing: React.FC<LandingProps> = ({ onNavigateToAuth }) => {
         <div className="partners-grid">
           
           <div className="partner-card">
-            <div className="partner-logo-container" style={{ background: '#ffffff', padding: '0.5rem', overflow: 'hidden' }}>
+            <div className="partner-logo-container">
               <img src={aciLogo} alt="Aero Club of India" style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
             </div>
             <h3 className="partner-name">Aero Club of India</h3>
@@ -205,7 +268,7 @@ export const Landing: React.FC<LandingProps> = ({ onNavigateToAuth }) => {
           </div>
 
           <div className="partner-card">
-            <div className="partner-logo-container" style={{ background: '#ffffff', padding: '0.5rem', overflow: 'hidden' }}>
+            <div className="partner-logo-container">
               <img src={dbLogo} alt="Dainik Bhaskar" style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
             </div>
             <h3 className="partner-name">Dainik Bhaskar</h3>
@@ -260,36 +323,153 @@ export const Landing: React.FC<LandingProps> = ({ onNavigateToAuth }) => {
         </div>
       </section>
 
-      {/* Event Timeline / Process */}
-      <section id="schedule" className="timeline-section">
-        <span className="section-tag" style={{ textAlign: 'center' }}>Competition Flow</span>
-        <h2 className="section-title" style={{ textAlign: 'center' }}>Event Path & Timeline</h2>
-        <div className="timeline-grid">
+      {/* Important Guidelines Section */}
+      <section id="guidelines" className="guidelines-section" style={{ padding: '6rem 2rem', background: 'rgba(19, 26, 44, 0.2)' }}>
+        <div style={{ maxWidth: '1200px', margin: '0 auto' }}>
+          <span className="section-tag" style={{ textAlign: 'center' }}>Must Read</span>
+          <h2 className="section-title" style={{ textAlign: 'center', marginBottom: '3rem' }}>Important Guidelines & Rules</h2>
           
-          <div className="timeline-card">
-            <div className="timeline-badge">1</div>
-            <h3 className="timeline-title">Pilot Registration</h3>
-            <p className="timeline-desc">Pilots register online, submit flight history, education, and specific model details including engine sizing and dimensions.</p>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '1.5rem' }}>
+            
+            <div className="card" style={{ padding: '2rem', display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+              <div style={{ background: 'rgba(99, 102, 241, 0.1)', width: '48px', height: '48px', borderRadius: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--primary)' }}>
+                <ShieldCheck size={24} />
+              </div>
+              <h3 style={{ fontSize: '1.25rem', fontWeight: 700, color: 'var(--text-primary)' }}>ACI Membership</h3>
+              <p style={{ color: 'var(--text-secondary)', fontSize: '0.95rem', lineHeight: '1.6' }}>
+                ACI membership is <strong>mandatory</strong> to participate. A 1-year membership will be provided at concessional rates directly at the competition venue.
+              </p>
+            </div>
+
+            <div className="card" style={{ padding: '2rem', display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+              <div style={{ background: 'rgba(99, 102, 241, 0.1)', width: '48px', height: '48px', borderRadius: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--primary)' }}>
+                <CreditCard size={24} />
+              </div>
+              <h3 style={{ fontSize: '1.25rem', fontWeight: 700, color: 'var(--text-primary)' }}>Registration Fee</h3>
+              <p style={{ color: 'var(--text-secondary)', fontSize: '0.95rem', lineHeight: '1.6' }}>
+                The official registration fee is <strong>INR 1000.00</strong> per participant.
+              </p>
+            </div>
+
+            <div className="card" style={{ padding: '2rem', display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+              <div style={{ background: 'rgba(99, 102, 241, 0.1)', width: '48px', height: '48px', borderRadius: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--primary)' }}>
+                <Badge size={24} />
+              </div>
+              <h3 style={{ fontSize: '1.25rem', fontWeight: 700, color: 'var(--text-primary)' }}>Photo ID Cards</h3>
+              <p style={{ color: 'var(--text-secondary)', fontSize: '0.95rem', lineHeight: '1.6' }}>
+                Official Photo Identify cards will be provided to all participants upon successful registration at the venue.
+              </p>
+            </div>
+
+            <div className="card" style={{ padding: '2rem', display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+              <div style={{ background: 'rgba(99, 102, 241, 0.1)', width: '48px', height: '48px', borderRadius: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--primary)' }}>
+                <UserCheck size={24} />
+              </div>
+              <h3 style={{ fontSize: '1.25rem', fontWeight: 700, color: 'var(--text-primary)' }}>Minimum Age</h3>
+              <p style={{ color: 'var(--text-secondary)', fontSize: '0.95rem', lineHeight: '1.6' }}>
+                The minimum age requirement for participation in the championship is <strong>14 years</strong>.
+              </p>
+            </div>
+
+            <div className="card" style={{ padding: '2rem', display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+              <div style={{ background: 'rgba(99, 102, 241, 0.1)', width: '48px', height: '48px', borderRadius: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--primary)' }}>
+                <Users size={24} />
+              </div>
+              <h3 style={{ fontSize: '1.25rem', fontWeight: 700, color: 'var(--text-primary)' }}>Category Quorum</h3>
+              <p style={{ color: 'var(--text-secondary)', fontSize: '0.95rem', lineHeight: '1.6' }}>
+                For a valid competition in any category, a min of <strong>05 participants</strong> with a high degree of aeromodel flying pertaining to that category is mandatory.
+              </p>
+            </div>
+
+            <div className="card" style={{ padding: '2rem', display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+              <div style={{ background: 'rgba(99, 102, 241, 0.1)', width: '48px', height: '48px', borderRadius: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--primary)' }}>
+                <Truck size={24} />
+              </div>
+              <h3 style={{ fontSize: '1.25rem', fontWeight: 700, color: 'var(--text-primary)' }}>Logistics & Transport</h3>
+              <p style={{ color: 'var(--text-secondary)', fontSize: '0.95rem', lineHeight: '1.6' }}>
+                Depending on regional registration volume, truck containers will be placed at central points for free to & fro transportation of packed models (at owner's risk).
+              </p>
+            </div>
+
+            <div className="card" style={{ padding: '2rem', display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+              <div style={{ background: 'rgba(99, 102, 241, 0.1)', width: '48px', height: '48px', borderRadius: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--primary)' }}>
+                <Coffee size={24} />
+              </div>
+              <h3 style={{ fontSize: '1.25rem', fontWeight: 700, color: 'var(--text-primary)' }}>Meals & Hospitality</h3>
+              <p style={{ color: 'var(--text-secondary)', fontSize: '0.95rem', lineHeight: '1.6' }}>
+                From <strong>18 Nov to 23 Nov</strong>, Breakfast and Lunch will be provided at the competition venue.
+              </p>
+            </div>
+
+          </div>
+          
+          {/* Contact Box */}
+          <div className="card" style={{ marginTop: '2rem', padding: '2rem', background: 'rgba(99, 102, 241, 0.05)', border: '1px solid rgba(99, 102, 241, 0.2)', display: 'flex', flexWrap: 'wrap', gap: '2rem', alignItems: 'center', justifyContent: 'space-between' }}>
+            <div>
+              <h3 style={{ fontSize: '1.25rem', fontWeight: 700, color: 'var(--text-primary)', marginBottom: '0.5rem' }}>Need Clarification?</h3>
+              <p style={{ color: 'var(--text-secondary)', fontSize: '0.95rem', maxWidth: '500px' }}>
+                Please allow 24 to 48 hours for addressing any queries. Contact <strong>Col Amit Mohan Sharma (Meet Director)</strong>.
+              </p>
+            </div>
+            <div style={{ display: 'flex', gap: '1.5rem', flexWrap: 'wrap' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', color: 'var(--text-primary)', background: 'rgba(37, 211, 102, 0.1)', padding: '0.5rem 1rem', borderRadius: '8px', border: '1px solid rgba(37, 211, 102, 0.2)' }}>
+                <MessageCircle size={20} style={{ color: '#25D366' }} />
+                <span style={{ fontWeight: 600 }}>WhatsApp: +91 769196222</span>
+              </div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', color: 'var(--text-primary)', background: 'rgba(99, 102, 241, 0.1)', padding: '0.5rem 1rem', borderRadius: '8px', border: '1px solid rgba(99, 102, 241, 0.2)' }}>
+                <Mail size={20} style={{ color: 'var(--primary)' }} />
+                <span style={{ fontWeight: 600 }}>amsharma22@gmail.com</span>
+              </div>
+            </div>
           </div>
 
-          <div className="timeline-card">
-            <div className="timeline-badge">2</div>
-            <h3 className="timeline-title">Admin Approval</h3>
-            <p className="timeline-desc">Event administrators verify the pilot's profile, educational context, and validate initial paperwork approvals.</p>
-          </div>
+        </div>
+      </section>
 
-          <div className="timeline-card">
-            <div className="timeline-badge">3</div>
-            <h3 className="timeline-title">Technical Scrutiny</h3>
-            <p className="timeline-desc">On-field technical commissioners measure wingspans, rotor diameters, and engine size to match database specifications.</p>
-          </div>
-
-          <div className="timeline-card">
-            <div className="timeline-badge">4</div>
-            <h3 className="timeline-title">Championship Flights</h3>
-            <p className="timeline-desc">Flight trials commence. Judges award flight points (Flight 1 & 2, Freestyle, and Landing precision) in realtime.</p>
-          </div>
-
+      {/* Event Schedule */}
+      <section id="schedule" style={{ padding: '2rem 4rem 6rem', maxWidth: '1000px', margin: '0 auto' }}>
+        <span className="section-tag" style={{ textAlign: 'center', display: 'block', margin: '0 auto 1rem' }}>Event Timeline</span>
+        <h2 className="section-title" style={{ textAlign: 'center', marginBottom: '3rem' }}>Championship Schedule</h2>
+        
+        <div style={{ background: 'rgba(255, 255, 255, 0.03)', border: '1px solid rgba(255, 255, 255, 0.08)', borderRadius: '16px', backdropFilter: 'blur(20px)', overflow: 'hidden', boxShadow: '0 20px 40px rgba(0,0,0,0.4)' }}>
+          <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
+            <thead>
+              <tr style={{ background: 'rgba(99, 102, 241, 0.1)', borderBottom: '1px solid rgba(255, 255, 255, 0.1)' }}>
+                <th style={{ padding: '1.25rem 1.5rem', color: 'var(--primary)', fontWeight: 700, width: '25%' }}>Date & Day</th>
+                <th style={{ padding: '1.25rem 1.5rem', color: 'var(--primary)', fontWeight: 700 }}>Time & Activities</th>
+              </tr>
+            </thead>
+            <tbody>
+              {[
+                { date: '18 Nov 2026', day: 'Wednesday', time: '1000 to 1700 h', act: 'Arrival, Registration and Unpacking of models.\nLocation - competition venue.' },
+                { date: '19 Nov 2026', day: 'Thursday', time: '0600 to 1700 h', act: 'Trial flights, competition and safety briefings.' },
+                { date: '20 Nov 2026', day: 'Friday', time: '0600 to 1700 h', act: 'Competition Day 1' },
+                { date: '21 Nov 2026', day: 'Saturday', time: '0600 to 1700 h', act: 'Competition Day 2' },
+                { date: '22 Nov 2026', day: 'Sunday', time: 'Full Day', act: 'Competition Reserve and Fun Flying day' },
+                { date: '23 Nov 2026', day: 'Monday', time: '0600 to 1700 h\n1900 h onwards', act: 'Sightseeing and packing of models.\nPrize Distribution ceremony and Gala Dinner.' },
+                { date: '24 Nov 2026', day: 'Tuesday', time: '0600 h onwards', act: 'Departure' },
+              ].map((row, idx) => (
+                <tr key={idx} style={{ borderBottom: '1px solid rgba(255, 255, 255, 0.05)' }}>
+                  <td style={{ padding: '1.25rem 1.5rem' }}>
+                    <div style={{ fontWeight: 600, fontSize: '1.05rem', color: 'var(--text-primary)' }}>{row.date}</div>
+                    <div style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>{row.day}</div>
+                  </td>
+                  <td style={{ padding: '1.25rem 1.5rem' }}>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+                      {row.act.split('\n').map((line, i) => (
+                        <div key={i} style={{ display: 'flex', gap: '1rem', alignItems: 'flex-start' }}>
+                          <span style={{ fontSize: '0.85rem', color: 'var(--accent)', fontWeight: 600, minWidth: '120px', marginTop: '0.15rem' }}>
+                            {row.time.split('\n')[i] || ''}
+                          </span>
+                          <span style={{ color: 'var(--text-secondary)', lineHeight: '1.5' }}>{line}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
         </div>
       </section>
 

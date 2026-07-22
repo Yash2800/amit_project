@@ -9,7 +9,16 @@ if (isset($_SERVER['REQUEST_METHOD'])) {
     }
 }
 
-$db_file = __DIR__ . '/../database.sqlite';
+$db_env = getenv('DB_PATH') ?: ($_ENV['DB_PATH'] ?? ($_SERVER['DB_PATH'] ?? ''));
+if (!empty($db_env)) {
+    if (preg_match('/^\//', $db_env) || preg_match('/^[a-zA-Z]:/', $db_env)) {
+        $db_file = $db_env;
+    } else {
+        $db_file = __DIR__ . '/../' . $db_env;
+    }
+} else {
+    $db_file = __DIR__ . '/../database.sqlite';
+}
 
 try {
     $db = new PDO("sqlite:" . $db_file);
@@ -42,12 +51,25 @@ function init_database($db) {
         created_at DATETIME DEFAULT CURRENT_TIMESTAMP
     )");
 
-    // Ensure allow_profile_edit column exists
     try {
         $db->exec("ALTER TABLE users ADD COLUMN allow_profile_edit INTEGER DEFAULT 0");
-    } catch (PDOException $e) {
-        // Column already exists, ignore
-    }
+    } catch (PDOException $e) {}
+
+    try {
+        $db->exec("ALTER TABLE users ADD COLUMN mobile TEXT");
+    } catch (PDOException $e) {}
+
+    try {
+        $db->exec("ALTER TABLE users ADD COLUMN aadhar_card TEXT");
+    } catch (PDOException $e) {}
+
+    try {
+        $db->exec("ALTER TABLE registrations ADD COLUMN payment_status TEXT DEFAULT 'pending'");
+    } catch (PDOException $e) {}
+
+    try {
+        $db->exec("ALTER TABLE registrations ADD COLUMN payment_id TEXT");
+    } catch (PDOException $e) {}
 
     // 2. Create Categories Table
     $db->exec("CREATE TABLE IF NOT EXISTS categories (
@@ -92,6 +114,14 @@ function init_database($db) {
         FOREIGN KEY(user_id) REFERENCES users(id),
         FOREIGN KEY(category_id) REFERENCES categories(id),
         UNIQUE(user_id, category_id)
+    )");
+
+    // 5. Create Flash Updates Table
+    $db->exec("CREATE TABLE IF NOT EXISTS flash_updates (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        message TEXT NOT NULL,
+        is_active INTEGER DEFAULT 1,
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP
     )");
 
     // Check if categories are already seeded

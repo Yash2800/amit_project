@@ -1,0 +1,24 @@
+<IfModule mod_rewrite.c>
+  RewriteEngine On
+  RewriteBase /aeromodelling/
+  
+  # Rewrite rule to route /api/(.*) requests to backend/api.php
+  # (Commented out because PHP API files are directly in the /api/ folder)
+  # RewriteRule ^api/(.*)$ backend/api.php [QSA,L]
+  
+  # Fallback rewrite rule to redirect non-file paths to index.html (SPA fallback)
+  RewriteCond %{REQUEST_FILENAME} !-f
+  RewriteCond %{REQUEST_FILENAME} !-d
+  RewriteCond %{REQUEST_URI} !/api/
+  RewriteRule . index.html [L]
+</IfModule>
+
+# Deny public downloads of the database
+<Files "db.sqlite">
+  Order Allow,Deny
+  Deny from all
+</Files>
+<Files "database.sqlite">
+  Order Allow,Deny
+  Deny from all
+</Files>

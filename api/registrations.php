@@ -72,6 +72,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $engine_brand = trim($input['engine_brand'] ?? '');
         $engine_size = trim($input['engine_size'] ?? '');
 
+        $payment_status = trim($input['payment_status'] ?? 'pending');
+        $payment_id = trim($input['payment_id'] ?? '');
+
         if ($category_id <= 0 || empty($age_group) || empty($model_name) || empty($brand)) {
             echo json_encode(["error" => "Category, Age Group, Model Name, and Brand are required fields."]);
             exit();
@@ -86,12 +89,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
 
         $ins = $db->prepare("INSERT INTO registrations (
-            user_id, category_id, age_group, model_name, brand, wing_span, rotor_dia, engine_type, engine_brand, engine_size, tech_status, status
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'pending', 'pending')");
+            user_id, category_id, age_group, model_name, brand, wing_span, rotor_dia, engine_type, engine_brand, engine_size, tech_status, status, payment_status, payment_id
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'pending', 'pending', ?, ?)");
         
         try {
             $ins->execute([
-                $target_user_id, $category_id, $age_group, $model_name, $brand, $wing_span, $rotor_dia, $engine_type, $engine_brand, $engine_size
+                $target_user_id, $category_id, $age_group, $model_name, $brand, $wing_span, $rotor_dia, $engine_type, $engine_brand, $engine_size, $payment_status, $payment_id
             ]);
             echo json_encode(["status" => "success", "id" => $db->lastInsertId()]);
         } catch (PDOException $e) {

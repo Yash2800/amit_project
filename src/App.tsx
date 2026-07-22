@@ -6,7 +6,9 @@ import { UserPortal } from './pages/UserPortal';
 import { CommPortal } from './pages/CommPortal';
 import { AdminPortal } from './pages/AdminPortal';
 import { Leaderboards } from './components/Leaderboards';
+import { Leaderboard } from './pages/Leaderboard';
 import { Landing } from './pages/Landing';
+import { Rules } from './pages/Rules';
 
 interface User {
   id: number;
@@ -30,7 +32,7 @@ function App() {
   const [user, setUser] = useState<User | null>(null);
   const [activeTab, setActiveTab] = useState<string>('');
   const [loading, setLoading] = useState(true);
-  const [view, setView] = useState<'landing' | 'portal'>('landing');
+  const [view, setView] = useState<'landing' | 'portal' | 'leaderboard' | 'rules'>('landing');
   const [authTab, setAuthTab] = useState<'login' | 'register'>('login');
 
   // Authenticate user on startup
@@ -65,7 +67,7 @@ function App() {
   }, []);
 
   const setDefaultTab = (role: string) => {
-    if (role === 'user') setActiveTab('profile');
+    if (role === 'user') setActiveTab('registration-wizard');
     else if (role === 'commissioner') setActiveTab('comm-checklist');
     else if (role === 'admin') setActiveTab('admin-stats');
   };
@@ -106,7 +108,15 @@ function App() {
     );
   }
 
-  // Not Authenticated - Land on Landing page by default
+  // Not Authenticated - Views
+  if (view === 'leaderboard') {
+    return <Leaderboard onBack={() => setView('landing')} />;
+  }
+
+  if (view === 'rules') {
+    return <Rules onBack={() => setView('landing')} />;
+  }
+
   if ((!token || !user) && view === 'landing') {
     return (
       <Landing 
@@ -114,6 +124,8 @@ function App() {
           setAuthTab(tab);
           setView('portal');
         }} 
+        onNavigateToLeaderboard={() => setView('leaderboard')}
+        onNavigateToRules={() => setView('rules')}
       />
     );
   }
